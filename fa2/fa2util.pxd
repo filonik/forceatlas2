@@ -14,12 +14,21 @@
 
 import cython
 
+import numpy as np
+
+cimport numpy as np
+
+
 # This will substitute for the nLayout object
 cdef class Node:
     cdef public double mass
-    cdef public double old_dx, old_dy
-    cdef public double dx, dy
-    cdef public double x, y
+    #cdef public double old_dx, old_dy
+    cdef public np.ndarray old_delta
+    #cdef public double dx, dy
+    cdef public np.ndarray delta
+    #cdef public double x, y
+    cdef public np.ndarray position
+
 
 # This is not in the original java function, but it makes it easier to
 # deal with edges.
@@ -31,33 +40,47 @@ cdef class Edge:
 # adjust the dx and dy values of `n1` (and optionally `n2`).  It does
 # not return anything.
 
-@cython.locals(xDist = cython.double, 
-               yDist = cython.double, 
+#@cython.locals(xDist = cython.double, 
+#               yDist = cython.double, 
+#               distance2 = cython.double, 
+#               factor = cython.double)
+@cython.locals(diff = np.ndarray, 
                distance2 = cython.double, 
                factor = cython.double)
 cdef void linRepulsion(Node n1, Node n2, double coefficient=*)
 
-@cython.locals(xDist = cython.double,
-               yDist = cython.double,
+
+#@cython.locals(xDist = cython.double,
+#               yDist = cython.double,
+#               distance2 = cython.double,
+#               factor = cython.double)
+@cython.locals(diff = np.ndarray,
                distance2 = cython.double,
                factor = cython.double)
 cdef void linRepulsion_region(Node n, Region r, double coefficient=*)
 
 
-@cython.locals(xDist = cython.double, 
-               yDist = cython.double, 
-               distance = cython.double, 
+#@cython.locals(xDist = cython.double,
+#               yDist = cython.double,
+#               distance = cython.double,
+#               factor = cython.double)
+@cython.locals(diff = np.ndarray,
+               distance = cython.double,
                factor = cython.double)
 cdef void linGravity(Node n, double g)
 
 
-@cython.locals(xDist = cython.double, 
-               yDist = cython.double, 
+#@cython.locals(xDist = cython.double,
+#               yDist = cython.double, 
+#               factor = cython.double)
+@cython.locals(diff = np.ndarray,
                factor = cython.double)
 cdef void strongGravity(Node n, double g, double coefficient=*)
 
-@cython.locals(xDist = cython.double, 
-               yDist = cython.double, 
+#@cython.locals(xDist = cython.double, 
+#               yDist = cython.double, 
+#               factor = cython.double)
+@cython.locals(diff = np.ndarray,
                factor = cython.double)
 cpdef void linAttraction(Node n1, Node n2, double e, bint distributedAttraction, double coefficient=*)
 
@@ -75,24 +98,41 @@ cpdef void apply_attraction(list nodes, list edges, bint distributedAttraction, 
 
 cdef class Region:
     cdef public double mass
-    cdef public double massCenterX, massCenterY
+    #cdef public double massCenterX, massCenterY
+    cdef public np.ndarray massCenter
     cdef public double size
     cdef public list nodes
     cdef public list subregions
 
-    @cython.locals(massSumX = cython.double,
-                   massSumY = cython.double,
+    #@cython.locals(massSumX = cython.double,
+    #               massSumY = cython.double,
+    #               n = Node,
+    #               distance = cython.double)
+    @cython.locals(massSum = np.ndarray,
                    n = Node,
                    distance = cython.double)
     cdef void updateMassAndGeometry(self)
 
+    #@cython.locals(n = Node,
+    #               leftNodes = list,
+    #               rightNodes = list,
+    #               topleftNodes = list,
+    #               bottomleftNodes = list,
+    #               toprightNodes = list,
+    #               bottomrightNodes = list,
+    #               subregion = Region)
     @cython.locals(n = Node,
-                   leftNodes = list,
-                   rightNodes = list,
-                   topleftNodes = list,
-                   bottomleftNodes = list,
-                   toprightNodes = list,
-                   bottomrightNodes = list,
+                   dim = int,
+                   powers = np.ndarray,
+                   nodes_0 = list,
+                   nodes_1 = list,
+                   nodes_2 = list,
+                   nodes_3 = list,
+                   nodes_4 = list,
+                   nodes_5 = list,
+                   nodes_6 = list,
+                   nodes_7 = list,
+                   nodes_by_region = list,
                    subregion = Region)
     cpdef void buildSubRegions(self)
 

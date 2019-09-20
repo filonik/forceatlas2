@@ -62,6 +62,10 @@ class ForceAtlas2:
                  scalingRatio=2.0,
                  strongGravityMode=False,
                  gravity=1.0,
+                 
+                 # Dimension
+                 dim=fa2util.DEFAULT_DIM,
+                 dtype=fa2util.DEFAULT_DTYPE,
 
                  # Log
                  verbose=True):
@@ -76,6 +80,8 @@ class ForceAtlas2:
         self.scalingRatio = scalingRatio
         self.strongGravityMode = strongGravityMode
         self.gravity = gravity
+        self.dim = dim
+        self.dtype = dtype
         self.verbose = verbose
 
     def init(self,
@@ -100,21 +106,27 @@ class ForceAtlas2:
         # Put nodes into a data structure we can understand
         nodes = []
         for i in range(0, G.shape[0]):
-            n = fa2util.Node()
+            #n = fa2util.Node()
+            n = fa2util.Node(self.dim, self.dtype)
             if isSparse:
                 n.mass = 1 + len(G.rows[i])
             else:
                 n.mass = 1 + numpy.count_nonzero(G[i])
-            n.old_dx = 0
-            n.old_dy = 0
-            n.dx = 0
-            n.dy = 0
+            #n.old_dx = 0
+            #n.old_dy = 0
+            n.old_delta = numpy.zeros((self.dim,), dtype=self.dtype)
+            #n.dx = 0
+            #n.dy = 0
+            n.delta = numpy.zeros((self.dim,), dtype=self.dtype)
             if pos is None:
-                n.x = random.random()
-                n.y = random.random()
+                #n.x = random.random()
+                #n.y = random.random()
+                # TODO: Respect self.dtype?
+                n.position = numpy.random.rand(self.dim)
             else:
-                n.x = pos[i][0]
-                n.y = pos[i][1]
+                #n.x = pos[i][0]
+                #n.y = pos[i][1]
+                n.position = numpy.array(pos[i], dtype=self.dtype)
             nodes.append(n)
 
         # Put edges into a data structure we can understand
@@ -180,15 +192,18 @@ class ForceAtlas2:
             niters = tqdm(niters)
         for _i in niters:
             for n in nodes:
-                n.old_dx = n.dx
-                n.old_dy = n.dy
-                n.dx = 0
-                n.dy = 0
+                #n.old_dx = n.dx
+                #n.old_dy = n.dy
+                n.old_delta = n.delta
+                #n.dx = 0
+                #n.dy = 0
+                n.delta = numpy.zeros((self.dim,), dtype=self.dtype)
 
             # Barnes Hut optimization
             if self.barnesHutOptimize:
                 barneshut_timer.start()
-                rootRegion = fa2util.Region(nodes)
+                #rootRegion = fa2util.Region(nodes)
+                rootRegion = fa2util.Region(nodes, self.dim, self.dtype)
                 rootRegion.buildSubRegions()
                 barneshut_timer.stop()
 
@@ -227,7 +242,8 @@ class ForceAtlas2:
             attraction_timer.display()
             applyforces_timer.display()
         # ================================================================
-        return [(n.x, n.y) for n in nodes]
+        #return [(n.x, n.y) for n in nodes]
+        return [n.position for n in nodes]
 
     # A layout for NetworkX.
     #

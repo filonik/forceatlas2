@@ -3,6 +3,8 @@ from os import path
 
 from setuptools import setup
 
+import numpy
+
 print("Installing fa2 package (fastest forceatlas2 python implementation)\n")
 
 here = path.abspath(path.dirname(__file__))
@@ -25,7 +27,7 @@ except ImportError:
     print(">>>> Are pre-generated C files available?")
 
 if USE_CYTHON:
-    ext_modules = [Extension('fa2.fa2util', ['fa2/fa2util.py', 'fa2/fa2util.pxd'], cython_directives={'language_level' : 3})]
+    ext_modules = [Extension('fa2.fa2util', ['fa2/fa2util.py', 'fa2/fa2util.pxd'], include_dirs=[numpy.get_include()], cython_directives={'language_level' : 3})]
     cmdclass = {'build_ext': build_ext}
     opts = {"ext_modules": ext_modules, "cmdclass": cmdclass}
 elif path.isfile(path.join(here, 'fa2/fa2util.c')):
